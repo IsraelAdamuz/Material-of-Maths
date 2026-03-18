@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maths 2º ESO - Practice Algebra</title>
+    <script defer src="https://unpkg.com/mathlive@0.98.6/dist/mathlive.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --bg: #ecf0f1;
+            --surface: #ffffff;
+            --success: #27ae60;
+            --error: #c0392b;
+            --exam: #8e44ad;
+            --theory: #f39c12;
+            --key-num: #f8f9fa;
+            --key-func: #e9ecef;
+            --key-action: #dceefb;
+            --border: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--secondary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { color: var(--primary); text-align: center; margin-bottom: 5px; }
+        .author-text { text-align: center; font-style: italic; color: #666; margin-top: 0; margin-bottom: 25px; font-size: 0.95rem; }
+        .kb-hint { text-align: center; color: #7f8c8d; font-size: 0.85rem; margin-top: -10px; margin-bottom: 15px; }
+        
+        .app-container {
+            background: var(--surface);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 25px;
+            box-sizing: border-box;
+        }
+
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn {
+            background: transparent; border: 2px solid var(--primary); color: var(--primary);
+            padding: 8px 18px; border-radius: 20px; cursor: pointer; font-weight: bold;
+            transition: 0.3s;
+        }
+        .tab-btn.active, .tab-btn:hover { background: var(--primary); color: white; }
+        .tab-btn.btn-exam { border-color: var(--exam); color: var(--exam); }
+        .tab-btn.btn-exam.active, .tab-btn.btn-exam:hover { background: var(--exam); color: white; }
+        .tab-btn.btn-teoria { border-color: var(--theory); color: var(--theory); }
+        .tab-btn.btn-teoria.active, .tab-btn.btn-teoria:hover { background: var(--theory); color: white; }
+
+        .sub-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .sub-tab-btn {
+            background: #ecf0f1; border: 1px solid #bdc3c7; color: #34495e;
+            padding: 6px 15px; border-radius: 15px; cursor: pointer; font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .sub-tab-btn.active, .sub-tab-btn:hover { background: #34495e; color: white; border-color: #34495e; }
+
+        .exam-header {
+            background: #f4ecf7; color: var(--exam); padding: 10px; border-radius: 8px;
+            text-align: center; font-weight: bold; margin-bottom: 15px; display: none;
+            border: 1px solid #d7bde2;
+        }
+
+        .problem-area {
+            text-align: center; background: #edf2f7; border-radius: 12px;
+            padding: 20px; margin-bottom: 20px; border: 1px solid #dce4ec;
+        }
+        .problem-statement { font-size: 1.2rem; color: #555; margin-bottom: 10px; font-weight: bold; }
+        .math-display { font-size: 2.2rem; margin: 10px 0; min-height: 50px; }
+
+        math-field {
+            font-size: 2rem; padding: 15px; border: 2px solid #dce4ec;
+            border-radius: 10px; width: 100%; background: #fff; margin-bottom: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.03);
+            -webkit-touch-callout: none; user-select: text;
+        }
+        math-field:focus-within { border-color: var(--primary); outline: none; }
+        math-field::part(virtual-keyboard-toggle) { display: none; }
+
+        .keyboard-wrapper { background: #f0f3f5; padding: 15px; border-radius: 12px; border: 1px solid #dce4ec; }
+        .keyboard-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; user-select: none; }
+        .key {
+            height: 50px; border: 1px solid var(--border); border-radius: 6px;
+            font-size: 1.2rem; cursor: pointer; background: var(--key-func);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 2px 0 #aab0b5; transition: transform 0.1s;
+            font-family: 'Cambria Math', serif; color: #333;
+        }
+        .key:active { transform: translateY(2px); box-shadow: none; }
+        .key-num { background: var(--key-num); font-family: sans-serif; font-weight: 600; color: #2c3e50; }
+        .key-action { background: var(--key-action); color: var(--primary); border-color: #aed6f1; font-weight: bold; }
+        .key-del { background: #ffdada; color: #c0392b; border-color: #ffbabb; }
+        
+        .frac-icon { display: flex; flex-direction: column; align-items: center; font-size: 0.7em; line-height: 1; }
+        .frac-line { width: 12px; height: 1px; background: currentColor; margin: 2px 0; }
+        .box { width: 8px; height: 8px; border: 1px dashed currentColor; }
+
+        .action-area { display: flex; gap: 15px; margin-top: 20px; }
+        .btn-main {
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer; color: white;
+            font-family: 'Segoe UI', sans-serif; transition: 0.2s;
+        }
+        .btn-check { background-color: var(--success); }
+        .btn-check:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .btn-next { background-color: var(--primary); }
+        
+        #feedback { margin-top: 20px; text-align: center; padding: 15px; border-radius: 8px; font-size: 1.1rem; display: none; }
+        .correct { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block !important; }
+        .incorrect { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block !important; }
+
+        /* Pantallas Modo Examen */
+        #exam-setup-area {
+            text-align: center; background: #fff; padding: 30px; border-radius: 12px;
+            border: 2px solid var(--exam); display: none; margin-bottom: 20px;
+        }
+        #exam-setup-area h2 { color: var(--exam); margin-top: 0; }
+        .exam-options {
+            display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 20px;
+        }
+        
+        #exam-results-area {
+            text-align: center; background: #fff; padding: 30px; border-radius: 12px;
+            border: 2px solid var(--exam); display: none;
+        }
+        #exam-results-area h2 { color: var(--exam); margin-top: 0; }
+        .score-circle {
+            width: 100px; height: 100px; border-radius: 50%; background: var(--exam);
+            color: white; font-size: 2.5rem; line-height: 100px; margin: 20px auto; font-weight: bold;
+        }
+        textarea.eval-box {
+            width: 100%; max-width: 500px; height: 100px; padding: 10px;
+            border: 1px solid #bdc3c7; border-radius: 8px; font-family: inherit; resize: vertical;
+        }
+
+        /* Pantalla Teoría */
+        #teoria-area { display: none; line-height: 1.6; }
+        .theory-card {
+            background: #fff; border: 1px solid #dce4ec; border-radius: 10px;
+            padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .theory-card h3 { color: var(--theory); border-bottom: 2px solid #fcf3cf; padding-bottom: 8px; margin-top: 0; }
+        .formula-box { background: #fdf2e9; padding: 10px; border-left: 4px solid var(--theory); font-weight: bold; margin: 10px 0; text-align: center; font-size: 1.2rem; }
+        .example-box { background: #f4f6f6; padding: 15px; border-radius: 8px; font-family: 'Cambria Math', serif; margin-top: 10px; }
+
+        @media (max-width: 768px) { .keyboard-grid { grid-template-columns: repeat(8, 1fr); } .hide-mobile { display: none; } }
+        @media (max-width: 500px) {
+            .keyboard-grid { grid-template-columns: repeat(5, 1fr); }
+            .key { height: 45px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Maths 2º ESO - Practice Algebra</h1>
+    <p class="author-text">(Material creado por Israel Adamuz)</p>
+    
+    <div class="app-container">
+        <div class="tabs">
+            <button class="tab-btn btn-teoria" id="btn-teoria" onclick="setMode('teoria')">Teoría</button>
+            <button class="tab-btn active" id="btn-notables" onclick="setMode('notables')">Identidades notables</button>
+            <button class="tab-btn" id="btn-factor" onclick="setMode('factor_comun')">Extraer factor común</button>
+            <button class="tab-btn btn-exam" id="btn-exam" onclick="openExamSetup()">Modo Examen</button>
+        </div>
+
+        <div id="teoria-area">
+            <div class="theory-card">
+                <h3>1. Identidades Notables</h3>
+                <p>Las identidades notables son fórmulas que nos permiten calcular rápidamente el cuadrado de un binomio o el producto de una suma por una diferencia sin tener que multiplicar término a término.</p>
+                
+                <strong>Cuadrado de una suma:</strong>
+                <div class="formula-box">$$ (a + b)^2 = a^2 + 2ab + b^2 $$</div>
+                <div class="example-box">
+                    <strong>Ejemplo: Desarrollar $$ (x + 3)^2 $$</strong><br>
+                    Aquí, $$ a = x $$ y $$ b = 3 $$.<br>
+                    <div style="font-size: 1.1em; margin-top: 10px;">
+                        $$ (x+3)^2 = x^2 + 2 \cdot x \cdot 3 + 3^2 = x^2 + 6x + 9 $$
+                    </div>
+                </div>
+
+                <br><strong>Cuadrado de una diferencia:</strong>
+                <div class="formula-box">$$ (a - b)^2 = a^2 - 2ab + b^2 $$</div>
+                <div class="example-box">
+                    <strong>Ejemplo: Desarrollar $$ (2x - 5)^2 $$</strong><br>
+                    Aquí, $$ a = 2x $$ y $$ b = 5 $$.<br>
+                    <div style="font-size: 1.1em; margin-top: 10px;">
+                        $$ (2x - 5)^2 = (2x)^2 - 2 \cdot (2x) \cdot 5 + 5^2 = 4x^2 - 20x + 25 $$
+                    </div>
+                </div>
+
+                <br><strong>Suma por diferencia:</strong>
+                <div class="formula-box">$$ (a + b)(a - b) = a^2 - b^2 $$</div>
+                <div class="example-box">
+                    <strong>Ejemplo: Desarrollar $$ (x + 4)(x - 4) $$</strong><br>
+                    Aquí, $$ a = x $$ y $$ b = 4 $$.<br>
+                    <div style="font-size: 1.1em; margin-top: 10px;">
+                        $$ (x + 4)(x - 4) = x^2 - 4^2 = x^2 - 16 $$
+                    </div>
+                </div>
+            </div>
+
+            <div class="theory-card">
+                <h3>2. Extraer Factor Común</h3>
+                <p>Consiste en hacer el proceso inverso a la propiedad distributiva. Buscamos qué números y letras se repiten multiplicando en todos los términos de la expresión.</p>
+                
+                <strong>Ejemplo Sencillo (1 letra, números fáciles):</strong>
+                <div class="example-box">
+                    <strong>Expresión:</strong> $$ 2x^3 + 4x^2 - 6x $$ <br>
+                    1. MCD de los números (2, 4, 6): El mayor número que divide a todos es el 2.<br>
+                    2. Letra repetida: La x está en todos. Cogemos la de <em>menor exponente</em>, que es x.<br>
+                    3. Factor Común: $$ 2x $$ <br>
+                    4. Dividimos cada término entre 2x:<br>
+                    Resultado final: $$ 2x(x^2 + 2x - 3) $$
+                </div>
+
+                <br><strong>Ejemplo Avanzado (Varias letras y MCD superior):</strong>
+                <div class="example-box">
+                    <strong>Expresión:</strong> $$ 12x^2y^3 - 18xy^2 + 24x^3y^2 $$ <br>
+                    1. MCD de los números (12, 18, 24): El máximo común divisor es 6.<br>
+                    2. Letras repetidas: La x y la y están en todos. Cogemos sus <em>menores exponentes</em>: la x y la y^2.<br>
+                    3. Factor Común: $$ 6xy^2 $$ <br>
+                    4. Construimos el paréntesis: (Dividiendo como antes)<br>
+                    Resultado final: $$ 6xy^2(2xy - 3 + 4x^2) $$
+                </div>
+            </div>
+        </div>
+
+        <div id="exam-setup-area">
+            <h2>Selecciona el tipo de examen</h2>
+            <div class="exam-options">
+                <button class="btn-main" style="background:#8e44ad;" onclick="startExam('notables')">Examen Identidades</button>
+                <button class="btn-main" style="background:#8e44ad;" onclick="startExam('factor_comun')">Examen Factor Común</button>
+                <button class="btn-main" style="background:#8e44ad;" onclick="startExam('mixed')">Examen Completo</button>
+            </div>
+        </div>
+
+        <div id="exam-header" class="exam-header">
+            Pregunta <span id="exam-q-current">1</span> de 10
+        </div>
+
+        <div id="main-workspace">
+            <div id="factor-sub-tabs" class="sub-tabs" style="display:none;">
+                <button class="sub-tab-btn active" id="btn-sub-facil" onclick="setSubMode('facil')">Nivel Fácil</button>
+                <button class="sub-tab-btn" id="btn-sub-avanzado" onclick="setSubMode('avanzado')">Nivel Avanzado</button>
+                <button class="sub-tab-btn" id="btn-sub-mixto" onclick="setSubMode('mixto')">Nivel Mixto</button>
+            </div>
+
+            <div class="problem-area">
+                <div class="problem-statement" id="stmt">Cargando...</div>
+                <div class="math-display" id="render"></div>
+            </div>
+
+            <p class="kb-hint">(Usa tu teclado físico para escribir letras como x, y, z si lo necesitas)</p>
+            <math-field id="mf" virtual-keyboard-mode="manual" placeholder="Escribe tu respuesta..."></math-field>
+
+            <div class="keyboard-wrapper">
+                <div class="keyboard-grid">
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('7')">7</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('8')">8</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('9')">9</button>
+                    <button class="key" onmousedown="event.preventDefault(); typeT('x')">𝑥</button>
+                    <button class="key" onmousedown="event.preventDefault(); typeT('y')">𝑦</button>
+                    <button class="key" onmousedown="event.preventDefault(); typeT('^2')">□²</button>
+                    <button class="key" onmousedown="event.preventDefault(); cmd('superscript')">□ⁿ</button>
+                    <button class="key hide-mobile" onmousedown="event.preventDefault(); typeT('(')">(</button>
+                    <button class="key hide-mobile" onmousedown="event.preventDefault(); typeT(')')">)</button>
+                    <button class="key key-del hide-mobile" onmousedown="event.preventDefault(); cmd('deleteBackward')">⌫</button>
+
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('4')">4</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('5')">5</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('6')">6</button>
+                    <button class="key" onmousedown="event.preventDefault(); typeT('+')">+</button>
+                    <button class="key" onmousedown="event.preventDefault(); typeT('-')">−</button>
+                    
+                    <button class="key key-action" onmousedown="event.preventDefault(); cmd('frac')">
+                        <div class="frac-icon"><div class="box"></div><div class="frac-line"></div><div class="box"></div></div>
+                    </button>
+                    
+                    <button class="key hide-mobile" onmousedown="event.preventDefault(); typeT('z')">𝑧</button>
+                    <button class="key hide-mobile" onmousedown="event.preventDefault(); typeT('*')">·</button>
+                    <div class="hide-mobile"></div><div class="hide-mobile"></div>
+
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('1')">1</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('2')">2</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('3')">3</button>
+                    <button class="key key-num" onmousedown="event.preventDefault(); typeT('0')">0</button>
+                    <div class="hide-mobile"></div>
+                    
+                    <button class="key key-action" style="grid-column: span 2" onmousedown="event.preventDefault(); cmd('moveToPreviousChar')">← Atrás</button>
+                    <button class="key key-action" style="grid-column: span 2" onmousedown="event.preventDefault(); cmd('moveToNextChar')">Adelante →</button>
+                    <div class="hide-mobile"></div>
+                </div>
+            </div>
+
+            <div class="action-area">
+                <button class="btn-main btn-check" id="btn-check-main" onclick="check()">Comprobar Respuesta</button>
+                <button class="btn-main btn-next" id="btn-next-main" onclick="handleNext()">Siguiente Ejercicio</button>
+            </div>
+
+            <div id="feedback"></div>
+        </div>
+
+        <div id="exam-results-area">
+            <h2>¡Examen Finalizado!</h2>
+            <div class="score-circle"><span id="exam-final-score">0</span>/10</div>
+            <div style="margin-top: 20px;">
+                <label style="font-weight:bold; color:#2c3e50;">Autoevaluación: ¿Qué necesitas repasar o qué dudas tienes?</label><br>
+                <textarea class="eval-box" placeholder="Ej: Me cuesta multiplicar signos negativos, o dudo al sumar exponentes..."></textarea>
+            </div>
+            <button class="btn-main btn-next" style="margin-top:20px; max-width: 300px;" onclick="exitExam()">Terminar y Volver a Práctica</button>
+        </div>
+    </div>
+
+    <script>
+        let mf, render, feedback, stmt;
+        let mode = 'notables';
+        let currentBaseMode = 'notables';
+        let subMode = 'facil'; // facil, avanzado, mixto
+        let activeQuestionMode = 'notables';
+        let answer = '';
+        
+        let isExamMode = false;
+        let examType = ''; 
+        let examQ = 1;
+        let examScore = 0;
+        const examMax = 10;
+
+        const repoNotables = [
+            {p: "(x+3)^2", a: "x^2+6x+9"}, {p: "(5-y)^2", a: "25-10y+y^2"}, {p: "(2x^2+4x)(2x^2-4x)", a: "4x^4-16x^2"},
+            {p: "(x-7)^2", a: "x^2-14x+49"}, {p: "(3y^2+2y)(3y^2-2y)", a: "9y^4-4y^2"}, {p: "(x^2-4x^3)^2", a: "x^4-8x^5+16x^6"},
+            {p: "(2y+5)^2", a: "4y^2+20y+25"}, {p: "(7x-x^2)^2", a: "49x^2-14x^3+x^4"}, {p: "(4y+6)(4y-6)", a: "16y^2-36"},
+            {p: "(x-8)^2", a: "x^2-16x+64"}, {p: "(x+\\frac{1}{2})^2", a: "x^2+x+\\frac{1}{4}"}, {p: "(5x^3-3x)^2", a: "25x^6-30x^4+9x^2"},
+            {p: "(2y+7)(2y-7)", a: "4y^2-49"}, {p: "(x^4+9x^2)^2", a: "x^8+18x^6+81x^4"}, {p: "(6x-2)^2", a: "36x^2-24x+4"},
+            {p: "(10x-x^2)(10x+x^2)", a: "100x^2-x^4"}, {p: "(3y+8)^2", a: "9y^2+48y+64"}, {p: "(\\frac{1}{5}x-2)(\\frac{1}{5}x+2)", a: "\\frac{1}{25}x^2-4"},
+            {p: "(y+12)^2", a: "y^2+24y+144"}, {p: "(5x-4)(5x+4)", a: "25x^2-16"}, {p: "(x^3+2x)^2", a: "x^6+4x^4+4x^2"},
+            {p: "(y-5)^2", a: "y^2-10y+25"}, {p: "(2x^2+\\frac{7}{2})(2x^2-\\frac{7}{2})", a: "4x^4-\\frac{49}{4}"}, {p: "(y^4-6y^2)^2", a: "y^8-12y^6+36y^4"}
+        ];
+
+        window.addEventListener('load', () => {
+            mf = document.getElementById('mf');
+            render = document.getElementById('render');
+            feedback = document.getElementById('feedback');
+            stmt = document.getElementById('stmt');
+            
+            mf.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
+            
+            if (customElements.get('math-field')) {
+                // Renderizar la teoría al cargar
+                if (window.MathLive) MathLive.renderMathInElement(document.getElementById('teoria-area'));
+                
+                gen();
+                mf.mathVirtualKeyboardPolicy = "manual"; 
+                mf.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !document.getElementById('btn-check-main').disabled) check(); });
+            }
+        });
+
+        function setMode(m) {
+            if(isExamMode) exitExam();
+            
+            // Gestionar botones principales
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            // Ocultar todas las secciones principales
+            document.getElementById('teoria-area').style.display = 'none';
+            document.getElementById('exam-setup-area').style.display = 'none';
+            document.getElementById('main-workspace').style.display = 'none';
+            document.getElementById('factor-sub-tabs').style.display = 'none';
+
+            if (m === 'teoria') {
+                document.getElementById('btn-teoria').classList.add('active');
+                document.getElementById('teoria-area').style.display = 'block';
+            } else {
+                currentBaseMode = m;
+                document.getElementById('main-workspace').style.display = 'block';
+                
+                if(m === 'notables') {
+                    document.getElementById('btn-notables').classList.add('active');
+                } else if(m === 'factor_comun') {
+                    document.getElementById('btn-factor').classList.add('active');
+                    document.getElementById('factor-sub-tabs').style.display = 'flex';
+                }
+                gen();
+            }
+        }
+
+        function setSubMode(sm) {
+            subMode = sm;
+            document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-sub-' + sm).classList.add('active');
+            gen();
+        }
+
+        function openExamSetup() {
+            if (isExamMode) { exitExam(); return; }
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-exam').classList.add('active');
+            
+            document.getElementById('teoria-area').style.display = 'none';
+            document.getElementById('main-workspace').style.display = 'none';
+            document.getElementById('exam-results-area').style.display = 'none';
+            document.getElementById('exam-header').style.display = 'none';
+            document.getElementById('exam-setup-area').style.display = 'block';
+        }
+
+        function startExam(type) {
+            isExamMode = true;
+            examType = type;
+            examQ = 1;
+            examScore = 0;
+            
+            document.getElementById('exam-setup-area').style.display = 'none';
+            document.getElementById('main-workspace').style.display = 'block';
+            document.getElementById('exam-header').style.display = 'block';
+            document.getElementById('factor-sub-tabs').style.display = 'none'; // En examen no mostramos las sub-pestañas
+            document.getElementById('btn-next-main').textContent = "Siguiente Pregunta";
+            document.querySelector('.eval-box').value = ""; 
+            
+            gen();
+        }
+
+        function exitExam() {
+            isExamMode = false;
+            document.getElementById('btn-exam').classList.remove('active');
+            document.getElementById('exam-header').style.display = 'none';
+            document.getElementById('btn-next-main').textContent = "Siguiente Ejercicio";
+            document.getElementById('exam-results-area').style.display = 'none';
+            setMode(currentBaseMode);
+        }
+
+        function handleNext() {
+            if (isExamMode) {
+                if (examQ >= examMax) {
+                    document.getElementById('main-workspace').style.display = 'none';
+                    document.getElementById('exam-header').style.display = 'none';
+                    document.getElementById('exam-results-area').style.display = 'block';
+                    document.getElementById('exam-final-score').textContent = examScore;
+                    return;
+                }
+                examQ++;
+            }
+            gen();
+        }
+
+        function typeT(txt) { mf.executeCommand(['insert', txt]); mf.focus(); }
+        function cmd(c) {
+            switch(c) {
+                case 'frac': mf.executeCommand(['insert', '\\frac{#0}{#1}']); break;
+                case 'superscript': mf.executeCommand('moveToSuperscript'); break;
+                default: mf.executeCommand(c);
+            }
+            mf.focus();
+        }
+
+        function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+        function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+        function formatPower(base, exp) {
+            if (exp === 0) return '';
+            if (exp === 1) return base;
+            return `${base}^${exp}`;
+        }
+
+        function gen() {
+            document.getElementById('btn-check-main').disabled = false;
+            feedback.style.display = 'none';
+            feedback.className = '';
+            mf.setValue('');
+            
+            if (isExamMode) {
+                document.getElementById('exam-q-current').textContent = examQ;
+                if (examType === 'mixed') {
+                    activeQuestionMode = rnd(0,1) ? 'notables' : 'factor_comun';
+                } else {
+                    activeQuestionMode = examType;
+                }
+            } else {
+                activeQuestionMode = currentBaseMode;
+            }
+
+            let problem = '';
+            
+            if (activeQuestionMode === 'notables') {
+                stmt.textContent = "Desarrolla la identidad:";
+                let roll = rnd(1, 100);
+
+                if (roll <= 40) {
+                    let item = repoNotables[rnd(0, repoNotables.length - 1)];
+                    problem = item.p;
+                    answer = item.a;
+                } else if (roll <= 60) {
+                    let v = rnd(0,1) ? 'x' : 'y';
+                    let a = rnd(2, 6); let b = rnd(2, 6);
+                    let p = rnd(3, 5); let q = rnd(1, p-1);
+                    let op = rnd(1, 3);
+
+                    let t1 = a + formatPower(v, p);
+                    let t2 = b + formatPower(v, q);
+
+                    let res1 = (a*a) + formatPower(v, 2*p);
+                    let res2 = (2*a*b) + formatPower(v, p+q);
+                    let res3 = (b*b) + formatPower(v, 2*q);
+
+                    if (op === 1) { problem = `(${t1} + ${t2})^2`; answer = `${res1} + ${res2} + ${res3}`; } 
+                    else if (op === 2) { problem = `(${t1} - ${t2})^2`; answer = `${res1} - ${res2} + ${res3}`; } 
+                    else { problem = `(${t1} + ${t2})(${t1} - ${t2})`; answer = `${res1} - ${res3}`; }
+                } else {
+                    let a = rnd(1, 4); let b = rnd(1, 5);
+                    let t1 = a===1 ? 'x' : a+'x'; let t2 = b===1 ? 'y' : b+'y';
+                    let op = rnd(1,2);
+                    if (op === 1) {
+                        problem = `(${t1} + ${t2})^2`;
+                        answer = `${a*a===1?'':a*a}x^2 + ${2*a*b}xy + ${b*b===1?'':b*b}y^2`;
+                    } else {
+                        problem = `(${t1} - ${t2})^2`;
+                        answer = `${a*a===1?'':a*a}x^2 - ${2*a*b}xy + ${b*b===1?'':b*b}y^2`;
+                    }
+                }
+
+            } else if (activeQuestionMode === 'factor_comun') {
+                stmt.textContent = "Extrae factor común:";
+                
+                let actualSubMode = subMode;
+                if (actualSubMode === 'mixto' || isExamMode) {
+                    actualSubMode = rnd(0, 1) ? 'facil' : 'avanzado';
+                }
+
+                let numTerms, c_f, vars_f, coefs_a, vars_a;
+
+                if (actualSubMode === 'facil') {
+                    // Nivel Fácil: 3-4 términos, números bajos, mayoritariamente 1 letra
+                    numTerms = rnd(3, 4);
+                    c_f = rnd(2, 5); // Factor numérico pequeño
+                    
+                    // 80% probabilidad de solo 'x', 20% probabilidad de 'x' e 'y'
+                    vars_f = rnd(1, 10) <= 8 ? {x: rnd(1, 2)} : {x: 1, y: 1};
+                    
+                    // Coeficientes restantes pequeños y sin divisores comunes extra (el 1 asegura eso)
+                    coefs_a = [1, rnd(2, 3), rnd(1, 4), rnd(2, 3)].slice(0, numTerms);
+                    
+                    // Variables restantes sencillas
+                    vars_a = [{x: rnd(1,2)}, {}, {x: 1}, {y: 1}].slice(0, numTerms);
+                
+                } else {
+                    // Nivel Avanzado: Forzar MCD (12, 18, 24...) y varias letras
+                    numTerms = rnd(3, 5);
+                    let posibles_cf = [4, 6, 8, 12, 18];
+                    c_f = posibles_cf[rnd(0, posibles_cf.length - 1)]; // Factor común grande (el MCD)
+                    
+                    // Más probabilidad de múltiples letras complejas
+                    vars_f = rnd(0, 1) ? {x: rnd(1, 3)} : {x: rnd(1, 2), y: rnd(1, 2)};
+                    
+                    // Coeficientes dentro del paréntesis. Ponemos un 1 para garantizar que el 'c_f' sea realmente el Máximo Común Divisor
+                    coefs_a = [1, rnd(2, 3), rnd(4, 5), rnd(2, 4), rnd(3, 5)].slice(0, numTerms);
+                    
+                    // Mezclamos el array para que el 1 no esté siempre al principio
+                    coefs_a = coefs_a.sort(() => Math.random() - 0.5);
+                    
+                    vars_a = [{y: 1}, {z: 1}, {}, {x: 1}, {y: 2}].slice(0, numTerms);
+                }
+
+                // Generar el LaTeX del factor común
+                let factorLatex = (c_f===1?"":c_f) + (vars_f.x?`x${vars_f.x>1?'^'+vars_f.x:''}`:'') + (vars_f.y?`y${vars_f.y>1?'^'+vars_f.y:''}`:'');
+                if(factorLatex==="") factorLatex = "1";
+
+                let probTerms = [];
+                let inTerms = [];
+
+                for(let i=0; i<numTerms; i++) {
+                    let c = c_f * coefs_a[i];
+                    let vx = (vars_f.x||0) + (vars_a[i].x||0);
+                    let vy = (vars_f.y||0) + (vars_a[i].y||0);
+                    let vz = (vars_a[i].z||0);
+                    
+                    let tl = (c===1?"":c) + (vx?`x${vx>1?'^'+vx:''}`:'') + (vy?`y${vy>1?'^'+vy:''}`:'') + (vz?`z${vz>1?'^'+vz:''}`:'');
+                    let inl = (coefs_a[i]===1?"":coefs_a[i]) + (vars_a[i].x?`x${vars_a[i].x>1?'^'+vars_a[i].x:''}`:'') + (vars_a[i].y?`y${vars_a[i].y>1?'^'+vars_a[i].y:''}`:'') + (vars_a[i].z?`z${vars_a[i].z>1?'^'+vars_a[i].z:''}`:'');
+                    
+                    if(tl==="") tl="1"; if(inl==="") inl="1";
+                    probTerms.push(tl); inTerms.push(inl);
+                }
+
+                problem = probTerms[0];
+                let inside = inTerms[0];
+                for(let i=1; i<numTerms; i++) {
+                    let sign = Math.random()>0.5 ? "+" : "-";
+                    problem += ` ${sign} ${probTerms[i]}`;
+                    inside += ` ${sign} ${inTerms[i]}`;
+                }
+                answer = `${factorLatex} \\cdot (${inside})`;
+                mf.setValue('\\placeholder{} \\cdot (\\placeholder{})');
+            }
+
+            render.innerHTML = `$$${problem}$$`;
+            if (window.MathLive) MathLive.renderMathInElement(render);
+            mf.focus();
+        }
+
+        function check() {
+            if(!answer) return;
+            let val = mf.getValue();
+            
+            let userNorm = normalizeStructure(val);
+            let ansNorm = normalizeStructure(answer);
+
+            let userReduced = simplifyFractionsInString(userNorm);
+            let ansReduced = simplifyFractionsInString(ansNorm);
+
+            if (activeQuestionMode === 'notables') {
+                userReduced = sortTerms(userReduced);
+                ansReduced = sortTerms(ansReduced);
+            }
+
+            let isOk = (userReduced === ansReduced);
+
+            if(isOk) {
+                feedback.innerHTML = "¡Correcto! 🎉";
+                feedback.className = "correct";
+                if(isExamMode) examScore++;
+            } else {
+                feedback.innerHTML = `Incorrecto. <br>Solución esperada: $$${answer}$$`;
+                feedback.className = "incorrect";
+                MathLive.renderMathInElement(feedback);
+            }
+
+            if(isExamMode) {
+                document.getElementById('btn-check-main').disabled = true;
+            }
+        }
+
+        function normalizeStructure(latex) {
+            let s = latex;
+            s = s.replace(/−|–|—/g, '-'); 
+            
+            s = s.replace(/\\left|\\right|\\displaystyle|\\text\{.*?\}|\s+|\\,|\\:|\\;|\\!/g, '');
+            s = s.replace(/\\cdot/g, ''); 
+            s = s.replace(/\\frac\{(\d+)([a-zA-Z](?:\^\{?\d+\}?)?)\}\{(\d+)\}/g, '\\frac{$1}{$3}$2');
+            s = s.replace(/\\frac\{([a-zA-Z](?:\^\{?\d+\}?)?)\}\{(\d+)\}/g, '\\frac{1}{$2}$1');
+            s = s.replace(/\^\{(\d+)\}/g, '^$1');
+            s = s.replace(/\\placeholder\[.*?\]\{.*?\}/g, '');
+            s = s.replace(/\\placeholder\{.*?\}/g, '');
+            s = s.replace(/\\placeholder/g, '');
+            return s;
+        }
+
+        function simplifyFractionsInString(latex) {
+            return latex.replace(/\\frac\{(\d+)\}\{(\d+)\}/g, (match, n, d) => {
+                const num = parseInt(n, 10);
+                const den = parseInt(d, 10);
+                const divisor = gcd(num, den);
+                return `\\frac{${num/divisor}}{${den/divisor}}`;
+            });
+        }
+
+        function sortTerms(latex) {
+            if (!latex) return latex;
+            let str = latex;
+            if (!str.startsWith('+') && !str.startsWith('-')) str = '+' + str;
+
+            let terms = [];
+            let currentTerm = "";
+            let depth = 0; 
+
+            for (let i = 0; i < str.length; i++) {
+                let char = str[i];
+                if (char === '{') depth++;
+                if (char === '}') depth--;
+
+                if (depth === 0 && (char === '+' || char === '-')) {
+                    if (currentTerm.length > 0) terms.push(currentTerm);
+                    currentTerm = char;
+                } else {
+                    currentTerm += char;
+                }
+            }
+            if (currentTerm.length > 0) terms.push(currentTerm);
+            terms.sort();
+            return terms.join('');
+        }
+    </script>
+</body>
+</html>
