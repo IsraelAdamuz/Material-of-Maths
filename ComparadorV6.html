@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparativas - Compañías de Electricidad</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💡</text></svg>">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .header-container { margin-bottom: 20px; }
+        h1, h2 { text-align: center; margin: 5px 0; }
+        h1 { font-size: 24px; color: #1f4e78; }
+        h2 { font-size: 16px; color: #555; font-weight: normal; }
+
+        .file-controls {
+            position: absolute; top: 20px; right: 20px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px; z-index: 10;
+        }
+        .file-controls .btn { font-size: 11px; padding: 6px 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); border-radius: 4px; }
+
+        @media (max-width: 850px) {
+            .file-controls { position: relative; top: 0; right: 0; display: flex; justify-content: center; margin-top: 15px; margin-bottom: 15px; }
+        }
+
+        .global-inputs { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .input-group { display: flex; flex-direction: column; align-items: center; font-weight: bold; }
+        .input-group input { margin-top: 5px; padding: 8px; width: 100px; text-align: center; border: 1px solid #ccc; border-radius: 4px; }
+
+        .global-constants { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; background: #f3e5f5; padding: 10px 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #ce93d8; }
+        .input-group-small { display: flex; flex-direction: column; align-items: center; font-size: 12px; font-weight: bold; color: #4a148c; }
+        .input-group-small input { margin-top: 4px; padding: 5px; width: 90px; text-align: center; border: 1px solid #ab47bc; border-radius: 4px; font-size: 12px; background-color: #fafafa; }
+
+        .action-bars { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+
+        table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: right; }
+        th { background-color: #bdd7ee; color: #000; text-align: center; }
+        td:first-child { text-align: left; }
+
+        input[type="text"], input[type="number"] { width: 90%; padding: 5px; box-sizing: border-box; text-align: right; border: 1px solid #ccc; }
+        input[type="text"] { text-align: left; }
+
+        .cheapest-price { background-color: #a9d08e !important; font-weight: bold; }
+        .summary-total { background-color: #e7f3fe; font-weight: bold; color: #0b5394; }
+
+        .details-row { display: none; background-color: #fcfcfc; }
+        .details-table { width: 90%; margin: 10px auto; border: 2px solid #5b9bd5; }
+        .details-table th { background-color: #dae3f3; color: #1f4e78; }
+        .details-table td { padding: 6px 10px; }
+        .details-table .sub-header { background-color: #fbe5d6; font-weight: bold; text-align: left;}
+        .details-table .total-row { background-color: #bdd7ee; font-weight: bold; color: #1f4e78; }
+        
+        .btn { background-color: #1f4e78; color: white; border: none; padding: 8px 12px; cursor: pointer; border-radius: 4px; font-size: 14px; transition: background-color 0.2s; }
+        .btn:hover { background-color: #133350; }
+        .btn-add { display: block; margin: 0 auto; font-size: 16px; padding: 10px 20px; background-color: #2e7d32; }
+        .btn-add:hover { background-color: #1b5e20; }
+        .btn-delete { background-color: #d32f2f; font-weight: bold; padding: 8px 15px; }
+        .btn-delete:hover { background-color: #b71c1c; }
+        
+        .btn-save { background-color: #6a1b9a; } .btn-save:hover { background-color: #4a148c; }
+        .btn-load { background-color: #00838f; } .btn-load:hover { background-color: #006064; }
+        .btn-export { background-color: #424242; } .btn-export:hover { background-color: #212121; }
+        .btn-import { background-color: #546e7a; } .btn-import:hover { background-color: #37474f; }
+        .btn-print { background-color: #e65100; } .btn-print:hover { background-color: #bf360c; }
+        .btn-excel { background-color: #0277bd; } .btn-excel:hover { background-color: #01579b; }
+
+        .chart-container { margin-top: 40px; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 40px; }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .btn, .action-bars, .btn-add, .file-controls, .chart-container { display: none !important; }
+            .global-inputs, .global-constants { box-shadow: none; border-bottom: 2px solid #000; border-radius: 0; background: white !important; border: none; }
+            .input-group-small { color: black; }
+            table { box-shadow: none; }
+            input[type="text"], input[type="number"] { border: none; background: transparent; padding: 0; color: black; font-family: inherit; font-size: inherit; }
+            .col-actions { display: none !important; }
+            .cheapest-price { background-color: #a9d08e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>COMPARATIVAS - COMPAÑÍAS DE ELECTRICIDAD</h1>
+        <h2>(Herramienta digital creada por Israel Adamuz)</h2>
+    </div>
+
+    <div class="file-controls">
+        <button class="btn btn-save" onclick="saveData()" title="Guardar en este navegador">💾 Guardar</button>
+        <button class="btn btn-load" onclick="loadData(true)" title="Cargar desde este navegador">📂 Cargar</button>
+        <button class="btn btn-export" onclick="exportDataToFile()" title="Descargar archivo a tu ordenador">⬇️ Descargar</button>
+        <button class="btn btn-import" onclick="triggerFileSelect()" title="Subir archivo desde tu ordenador">⬆️ Subir</button>
+        <input type="file" id="file-input" style="display: none;" accept=".json" onchange="importDataFromFile()">
+    </div>
+
+    <div class="global-inputs">
+        <div class="input-group">
+            <label>Nº Días mes:</label>
+            <input type="number" id="global-dias" value="27" min="1">
+        </div>
+        <div class="input-group">
+            <label>Consumo actual (kWh):</label>
+            <input type="number" id="global-consumo" value="375" min="0">
+        </div>
+        <div class="input-group">
+            <label>Potencia (kW):</label>
+            <input type="number" id="global-potencia" value="4.6" step="0.1" min="0">
+        </div>
+    </div>
+
+    <div class="global-constants">
+        <div class="input-group-small">
+            <label>Bono Social (€/día):</label>
+            <input type="number" id="const-bono" value="0.019121" step="0.000001">
+        </div>
+        <div class="input-group-small">
+            <label>Impuesto Eléc. (%):</label>
+            <input type="number" id="const-impuesto" value="5.112696" step="0.000001">
+        </div>
+        <div class="input-group-small">
+            <label>Alquiler Contador (€/día):</label>
+            <input type="number" id="const-alquiler" value="0.026630" step="0.000001">
+        </div>
+        <div class="input-group-small">
+            <label>IVA (%):</label>
+            <input type="number" id="const-iva" value="21" step="0.1">
+        </div>
+    </div>
+
+    <div class="action-bars">
+        <button class="btn btn-print" onclick="printReport('summary')">🖨️ Imprimir Resumen</button>
+        <button class="btn btn-print" onclick="printReport('full')">🖨️ Imprimir Completo</button>
+        <button class="btn btn-excel" onclick="exportToCSV()">📊 Exportar a Excel</button>
+    </div>
+
+    <table id="mainTable">
+        <thead>
+            <tr>
+                <th>RESUMEN COMPARATIVAS</th>
+                <th>€/kWh</th>
+                <th>€/kW día P1</th>
+                <th>€/kW día P2</th>
+                <th>Precio/mes</th>
+                <th class="col-actions">Desglose</th>
+                <th class="col-actions">Eliminar</th>
+            </tr>
+        </thead>
+        <tbody id="companyList">
+        </tbody>
+    </table>
+
+    <button class="btn btn-add" onclick="addCompany()">+ Añadir nueva compañía</button>
+
+    <div class="chart-container">
+        <h2 style="color: #1f4e78; font-size: 20px; font-weight: bold;">📊 Análisis de Puntos de Equilibrio e Intersecciones</h2>
+        <p style="text-align: center; font-size: 13px; color: #555;">
+            Pasa el ratón por las líneas para ver el coste exacto en cualquier consumo.<br>
+            Los <strong>puntos negros</strong> marcan exactamente dónde una tarifa pasa a ser más barata que otra.<br>
+            <strong>💡 Truco:</strong> Haz clic en los nombres de la leyenda para aislar las compañías que quieras comparar.
+        </p>
+        <div style="position: relative; height: 60vh; width: 100%;">
+            <canvas id="costChart"></canvas>
+        </div>
+    </div>
+
+<script>
+    // Registramos el plugin de las etiquetas de datos (para mostrar los cartelitos en las intersecciones)
+    Chart.register(ChartDataLabels);
+
+    const formatter = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+    let myLineChart = null; 
+
+    document.addEventListener('input', calculateAll);
+
+    function createDetailsTableHTML() {
+        return `
+            <table class="details-table">
+                <thead>
+                    <tr><th colspan="4" class="company-title-detail" style="font-size:16px; background-color:#f8cbad;">NOMBRE COMPAÑÍA</th></tr>
+                    <tr><th>Concepto</th><th>Cantidad</th><th>Precio/ud</th><th>Importe</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Consumo electricidad (kWh)</td><td class="d-cantidad-consumo"></td><td class="d-precio-consumo"></td><td class="d-importe-consumo"></td></tr>
+                    <tr><td>Término de potencia P1 (kW)</td><td class="d-cantidad-potencia"></td><td class="d-precio-p1"></td><td class="d-importe-p1"></td></tr>
+                    <tr><td>Término de potencia P2 (kW)</td><td class="d-cantidad-potencia2"></td><td class="d-precio-p2"></td><td class="d-importe-p2"></td></tr>
+                    <tr><td>Financiación de Bono Social (días)</td><td class="d-cantidad-dias"></td><td class="d-precio-bono"></td><td class="d-importe-bono"></td></tr>
+                    <tr><td colspan="3" style="text-align:right;">Subtotal</td><td class="d-subtotal"></td></tr>
+                    <tr><td>Impuesto electricidad</td><td class="d-base-impuesto"></td><td class="d-nombre-impuesto"></td><td class="d-importe-impuesto"></td></tr>
+                    <tr><td colspan="4" class="sub-header">Otros conceptos</td></tr>
+                    <tr><td>Alquiler de contador</td><td class="d-cantidad-dias2"></td><td class="d-precio-alquiler"></td><td class="d-importe-alquiler"></td></tr>
+                    <tr class="total-row" style="background-color: #bdd7ee;"><td colspan="3">Total electricidad</td><td class="d-total-elec"></td></tr>
+                    <tr><td style="text-align:right;" class="d-rotulo-iva">IVA</td><td class="d-base-iva"></td><td class="d-nombre-iva"></td><td class="d-importe-iva"></td></tr>
+                    <tr class="total-row" style="font-size: 16px;"><td colspan="3">TOTAL A PAGAR</td><td class="d-total-pagar"></td></tr>
+                </tbody>
+            </table>
+        `;
+    }
+
+    function addCompany(name = "", pEnergia = 0, p1 = 0, p2 = 0) {
+        const tbody = document.getElementById('companyList');
+        const trSummary = document.createElement('tr');
+        trSummary.className = 'summary-row';
+        trSummary.innerHTML = `
+            <td><input type="text" class="in-name" value="${name}" placeholder="Nombre compañía"></td>
+            <td><input type="number" class="in-energia" value="${pEnergia}" step="0.000001"></td>
+            <td><input type="number" class="in-p1" value="${p1}" step="0.000001"></td>
+            <td><input type="number" class="in-p2" value="${p2}" step="0.000001"></td>
+            <td class="summary-total out-total">0,00 €</td>
+            <td class="col-actions" style="text-align:center;"><button class="btn" onclick="toggleDetails(this)">Ver / Ocultar</button></td>
+            <td class="col-actions" style="text-align:center;"><button class="btn btn-delete" onclick="deleteCompany(this)">-</button></td>
+        `;
+
+        const trDetails = document.createElement('tr');
+        trDetails.className = 'details-row';
+        trDetails.innerHTML = `<td colspan="7">${createDetailsTableHTML()}</td>`;
+
+        tbody.appendChild(trSummary);
+        tbody.appendChild(trDetails);
+        calculateAll();
+    }
+
+    function deleteCompany(btn) {
+        const summaryRow = btn.closest('tr');
+        const detailsRow = summaryRow.nextElementSibling;
+        summaryRow.remove();
+        detailsRow.remove();
+        calculateAll(); 
+    }
+
+    function toggleDetails(btn) {
+        const summaryRow = btn.closest('tr');
+        const detailsRow = summaryRow.nextElementSibling;
+        detailsRow.style.display = detailsRow.style.display === 'table-row' ? 'none' : 'table-row';
+    }
+
+    function updateChart(chartDataArray) {
+        const ctx = document.getElementById('costChart').getContext('2d');
+        
+        const globalDias = parseFloat(document.getElementById('global-dias').value) || 0;
+        const globalPotencia = parseFloat(document.getElementById('global-potencia').value) || 0;
+        const valorBono = parseFloat(document.getElementById('const-bono').value) || 0;
+        const valorImpuesto = (parseFloat(document.getElementById('const-impuesto').value) || 0) / 100;
+        const valorAlquiler = parseFloat(document.getElementById('const-alquiler').value) || 0;
+        const valorIVA = (parseFloat(document.getElementById('const-iva').value) || 0) / 100;
+
+        const maxKwh = 1000; // Hasta dónde llega la gráfica
+
+        // 1. Calculamos las rectas (Y = mX + b) para todas las compañías
+        const factorImpuesto = 1 + valorImpuesto;
+        const factorIVA = 1 + valorIVA;
+        
+        const rectas = chartDataArray.map(comp => {
+            const costeFijoPotencias = (globalPotencia * comp.p1 * globalDias) + (globalPotencia * comp.p2 * globalDias) + (globalDias * valorBono);
+            // La pendiente (m) es el coste por kWh con sus impuestos correspondientes
+            const m = comp.pEnergia * factorImpuesto * factorIVA;
+            // El punto de corte con el eje Y (b) son los costes fijos totales con impuestos
+            const b = (costeFijoPotencias * factorImpuesto + (globalDias * valorAlquiler)) * factorIVA;
+            return { name: comp.name || "Sin nombre", m: m, b: b };
+        });
+
+        // 2. Buscamos las intersecciones matemáticas entre todas las rectas
+        let puntosInterseccion = [];
+        for (let i = 0; i < rectas.length; i++) {
+            for (let j = i + 1; j < rectas.length; j++) {
+                const r1 = rectas[i];
+                const r2 = rectas[j];
+                
+                // Si las rectas no son paralelas, se cortan
+                if (Math.abs(r1.m - r2.m) > 0.000001) {
+                    const xCorte = (r2.b - r1.b) / (r1.m - r2.m);
+                    // Solo mostramos intersecciones lógicas (consumo positivo) y dentro del gráfico
+                    if (xCorte > 0 && xCorte <= maxKwh) {
+                        const yCorte = r1.m * xCorte + r1.b;
+                        puntosInterseccion.push({ x: xCorte, y: yCorte, desc: `Corte:\n${r1.name}\ny\n${r2.name}` });
+                    }
+                }
+            }
+        }
+
+        const colores = ['#e6194B', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#42d4f4', '#f032e6', '#bfef45', '#fabed4'];
+
+        // 3. Preparamos las líneas (datasets) para Chart.js usando escala lineal (pares X, Y)
+        const datasets = rectas.map((recta, index) => {
+            const dataPoints = [];
+            for (let i = 0; i <= maxKwh; i += 50) {
+                dataPoints.push({ x: i, y: (recta.m * i) + recta.b });
+            }
+            return {
+                type: 'line',
+                label: recta.name,
+                data: dataPoints,
+                borderColor: colores[index % colores.length],
+                backgroundColor: colores[index % colores.length],
+                borderWidth: 2,
+                pointRadius: 1, // Puntos pequeños para la línea general
+                pointHoverRadius: 6, // Puntos grandes al pasar el ratón
+                fill: false,
+                tension: 0,
+                datalabels: { display: false } // No mostramos textos encima de la línea general
+            };
+        });
+
+        // 4. Añadimos el dataset especial para las INTERSECCIONES
+        if (puntosInterseccion.length > 0) {
+            datasets.push({
+                type: 'scatter',
+                label: 'Puntos de Intersección',
+                data: puntosInterseccion,
+                backgroundColor: '#000', // Puntos negros
+                borderColor: '#fff',
+                borderWidth: 1,
+                pointRadius: 6, // Bolas grandes
+                pointHoverRadius: 8,
+                // Configuramos los textos visuales explícitos
+                datalabels: {
+                    display: true,
+                    align: 'right',
+                    offset: 8,
+                    formatter: function(value, context) {
+                        return `${value.x.toFixed(0)} kWh\n${value.y.toFixed(2)} €`;
+                    },
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderColor: '#333',
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    font: { size: 11, weight: 'bold' },
+                    color: '#c62828',
+                    padding: 4
+                }
+            });
+        }
+
+        if (myLineChart) myLineChart.destroy();
+
+        myLineChart = new Chart(ctx, {
+            data: { datasets: datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } },
+                    // Personalizamos el Tooltip (el globo negro al pasar el ratón)
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.type === 'scatter') {
+                                    return `Intersección: ${context.raw.x.toFixed(0)} kWh - ${context.raw.y.toFixed(2)} €`;
+                                }
+                                return `${context.dataset.label} | Consumo: ${context.parsed.x} kWh | Coste: ${context.parsed.y.toFixed(2)} €`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: { display: true, text: 'Consumo Mensual (kWh)', font: { weight: 'bold' } },
+                        min: 0,
+                        max: maxKwh
+                    },
+                    y: {
+                        title: { display: true, text: 'Coste Total a Pagar (€)', font: { weight: 'bold' } },
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+    }
+
+    function calculateAll() {
+        const globalDias = parseFloat(document.getElementById('global-dias').value) || 0;
+        const globalConsumo = parseFloat(document.getElementById('global-consumo').value) || 0;
+        const globalPotencia = parseFloat(document.getElementById('global-potencia').value) || 0;
+
+        const valorBono = parseFloat(document.getElementById('const-bono').value) || 0;
+        const valorImpuesto = (parseFloat(document.getElementById('const-impuesto').value) || 0) / 100;
+        const valorAlquiler = parseFloat(document.getElementById('const-alquiler').value) || 0;
+        const valorIVA = (parseFloat(document.getElementById('const-iva').value) || 0) / 100;
+
+        const summaryRows = document.querySelectorAll('.summary-row');
+        let minTotal = Infinity;
+        let totalCells = [];
+        let chartDataArray = []; 
+
+        summaryRows.forEach(row => {
+            const detailsRow = row.nextElementSibling;
+
+            const name = row.querySelector('.in-name').value || "";
+            const pEnergia = parseFloat(row.querySelector('.in-energia').value) || 0;
+            const p1 = parseFloat(row.querySelector('.in-p1').value) || 0;
+            const p2 = parseFloat(row.querySelector('.in-p2').value) || 0;
+
+            chartDataArray.push({ name: name, pEnergia: pEnergia, p1: p1, p2: p2 });
+
+            const impConsumo = globalConsumo * pEnergia;
+            const impP1 = globalPotencia * p1 * globalDias;
+            const impP2 = globalPotencia * p2 * globalDias;
+            const impBono = globalDias * valorBono;
+            
+            const subtotal = impConsumo + impP1 + impP2 + impBono;
+            const impImpuesto = subtotal * valorImpuesto;
+            const impAlquiler = globalDias * valorAlquiler;
+            
+            const totalElec = subtotal + impImpuesto + impAlquiler;
+            const impIVA = totalElec * valorIVA;
+            const totalPagar = (totalElec + impIVA) || 0;
+
+            if (totalPagar > 0 && totalPagar < minTotal) minTotal = totalPagar;
+
+            const outTotalCell = row.querySelector('.out-total');
+            outTotalCell.innerText = formatter.format(totalPagar);
+            outTotalCell.classList.remove('cheapest-price');
+            outTotalCell.dataset.total = totalPagar;
+            totalCells.push(outTotalCell);
+
+            detailsRow.querySelector('.company-title-detail').innerText = name ? name.toUpperCase() : "COMPAÑÍA SIN NOMBRE";
+            detailsRow.querySelector('.d-cantidad-consumo').innerText = globalConsumo;
+            detailsRow.querySelector('.d-precio-consumo').innerText = pEnergia.toFixed(6).replace('.',',') + " €/kWh";
+            detailsRow.querySelector('.d-importe-consumo').innerText = formatter.format(impConsumo);
+            detailsRow.querySelector('.d-cantidad-potencia').innerText = globalPotencia.toFixed(3).replace('.',',');
+            detailsRow.querySelector('.d-precio-p1').innerText = p1.toFixed(6).replace('.',',') + " €/kW día";
+            detailsRow.querySelector('.d-importe-p1').innerText = formatter.format(impP1);
+            detailsRow.querySelector('.d-cantidad-potencia2').innerText = globalPotencia.toFixed(3).replace('.',',');
+            detailsRow.querySelector('.d-precio-p2').innerText = p2.toFixed(6).replace('.',',') + " €/kW día";
+            detailsRow.querySelector('.d-importe-p2').innerText = formatter.format(impP2);
+            detailsRow.querySelector('.d-cantidad-dias').innerText = globalDias + " días";
+            detailsRow.querySelector('.d-precio-bono').innerText = valorBono.toFixed(6).replace('.',',') + " €/día";
+            detailsRow.querySelector('.d-importe-bono').innerText = formatter.format(impBono);
+            detailsRow.querySelector('.d-subtotal').innerText = formatter.format(subtotal);
+            detailsRow.querySelector('.d-base-impuesto').innerText = formatter.format(subtotal);
+            detailsRow.querySelector('.d-nombre-impuesto').innerText = (valorImpuesto * 100).toFixed(6).replace('.',',') + "%";
+            detailsRow.querySelector('.d-importe-impuesto').innerText = formatter.format(impImpuesto);
+            detailsRow.querySelector('.d-cantidad-dias2').innerText = globalDias + " días";
+            detailsRow.querySelector('.d-precio-alquiler').innerText = valorAlquiler.toFixed(6).replace('.',',') + " €/día";
+            detailsRow.querySelector('.d-importe-alquiler').innerText = formatter.format(impAlquiler);
+            detailsRow.querySelector('.d-total-elec').innerText = formatter.format(totalElec);
+            detailsRow.querySelector('.d-rotulo-iva').innerText = "IVA (" + (valorIVA * 100).toFixed(0) + "%)";
+            detailsRow.querySelector('.d-base-iva').innerText = formatter.format(totalElec);
+            detailsRow.querySelector('.d-nombre-iva').innerText = (valorIVA * 100).toFixed(0) + "%";
+            detailsRow.querySelector('.d-importe-iva').innerText = formatter.format(impIVA);
+            detailsRow.querySelector('.d-total-pagar').innerText = formatter.format(totalPagar);
+        });
+
+        if (minTotal !== Infinity) {
+            totalCells.forEach(cell => {
+                if (Math.abs(parseFloat(cell.dataset.total) - minTotal) < 0.01) {
+                    cell.classList.add('cheapest-price');
+                }
+            });
+        }
+
+        updateChart(chartDataArray);
+    }
+
+    function gatherCurrentData() {
+        const data = {
+            globalDias: document.getElementById('global-dias').value,
+            globalConsumo: document.getElementById('global-consumo').value,
+            globalPotencia: document.getElementById('global-potencia').value,
+            constBono: document.getElementById('const-bono').value,
+            constImpuesto: document.getElementById('const-impuesto').value,
+            constAlquiler: document.getElementById('const-alquiler').value,
+            constIva: document.getElementById('const-iva').value,
+            companies: []
+        };
+        document.querySelectorAll('.summary-row').forEach(row => {
+            data.companies.push({
+                name: row.querySelector('.in-name').value,
+                pEnergia: row.querySelector('.in-energia').value,
+                p1: row.querySelector('.in-p1').value,
+                p2: row.querySelector('.in-p2').value
+            });
+        });
+        return data;
+    }
+
+    function applyDataToForm(data) {
+        document.getElementById('global-dias').value = data.globalDias || 27;
+        document.getElementById('global-consumo').value = data.globalConsumo || 375;
+        document.getElementById('global-potencia').value = data.globalPotencia || 4.6;
+        document.getElementById('const-bono').value = data.constBono || 0.019121;
+        document.getElementById('const-impuesto').value = data.constImpuesto || 5.112696;
+        document.getElementById('const-alquiler').value = data.constAlquiler || 0.026630;
+        document.getElementById('const-iva').value = data.constIva || 21;
+
+        document.getElementById('companyList').innerHTML = '';
+
+        if (data.companies && data.companies.length > 0) {
+            data.companies.forEach(comp => addCompany(comp.name, comp.pEnergia, comp.p1, comp.p2));
+        } else {
+            addCompany("NUEVA PROPUESTA NATURGY", 0.109900, 0.123030, 0.037337);
+        }
+    }
+
+    function saveData() {
+        localStorage.setItem('comparativaElectricidadData', JSON.stringify(gatherCurrentData()));
+        alert('¡Trabajo guardado en este navegador correctamente!');
+    }
+
+    function loadData(manualLoad = false) {
+        try {
+            const savedData = localStorage.getItem('comparativaElectricidadData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                if (!data || !data.companies || data.companies.length === 0) throw new Error("Datos vacíos");
+                applyDataToForm(data);
+                if (manualLoad) alert('¡Datos del navegador cargados correctamente!');
+                return true;
+            }
+        } catch(e) {
+            console.error(e);
+            if (manualLoad) alert('Los datos guardados estaban vacíos o corruptos. Se han cargado los valores por defecto.');
+        }
+        if (manualLoad && !localStorage.getItem('comparativaElectricidadData')) alert('No tienes ningún trabajo guardado en este navegador.');
+        return false;
+    }
+
+    function exportDataToFile() {
+        const jsonString = JSON.stringify(gatherCurrentData(), null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'Mis_Tarifas_Electricas.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+
+    function triggerFileSelect() {
+        const fileInput = document.getElementById('file-input');
+        try { fileInput.value = ''; } catch(e) {}
+        fileInput.click();
+    }
+
+    function importDataFromFile() {
+        const file = document.getElementById('file-input').files;
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                applyDataToForm(JSON.parse(e.target.result));
+                alert('✅ ¡Archivo subido con éxito y datos actualizados!');
+            } catch(error) {
+                alert('❌ Error al leer el archivo. Asegúrate de que es un archivo .json válido.');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function printReport(type) {
+        const detailsRows = document.querySelectorAll('.details-row');
+        const originalDisplays = Array.from(detailsRows).map(row => row.style.display);
+        if (type === 'summary') detailsRows.forEach(row => row.style.display = 'none');
+        else detailsRows.forEach(row => row.style.display = 'table-row');
+        window.print();
+        detailsRows.forEach((row, index) => row.style.display = originalDisplays[index]);
+    }
+
+    function exportToCSV() {
+        const d = document;
+        let csvContent = "\uFEFFDatos Base:\nDias mes:;" + d.getElementById('global-dias').value + "\nConsumo (kWh):;" + d.getElementById('global-consumo').value + "\nPotencia (kW):;" + d.getElementById('global-potencia').value + "\n\nValores Regulados:\nBono Social (€/dia):;" + d.getElementById('const-bono').value.replace('.',',') + "\nImpuesto Electricidad (%):;" + d.getElementById('const-impuesto').value.replace('.',',') + "\nAlquiler Contador (€/dia):;" + d.getElementById('const-alquiler').value.replace('.',',') + "\nIVA (%):;" + d.getElementById('const-iva').value.replace('.',',') + "\n\nCOMPANIA;PRECIO ENERGIA (€/kWh);POTENCIA P1 (€/kW dia);POTENCIA P2 (€/kW dia);TOTAL A PAGAR/MES\n";
+
+        document.querySelectorAll('.summary-row').forEach(row => {
+            csvContent += `${row.querySelector('.in-name').value || "Sin nombre"};${row.querySelector('.in-energia').value.replace('.',',')};${row.querySelector('.in-p1').value.replace('.',',')};${row.querySelector('.in-p2').value.replace('.',',')};${row.querySelector('.out-total').innerText.replace('€','').trim()}\n`;
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = "comparativa_electricidad.csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    window.onload = function() {
+        try {
+            if (!localStorage.getItem('comparativaElectricidadData') || !loadData(false)) {
+                document.getElementById('companyList').innerHTML = ''; 
+                addCompany("NUEVA PROPUESTA NATURGY", 0.109900, 0.123030, 0.037337);
+                addCompany("NUEVA PROPUESTA NATURGY LOYAL LUZ", 0.108000, 0.113620, 0.040193);
+            }
+        } catch(e) { alert("Hubo un problema arrancando el programa."); }
+    };
+</script>
+</body>
+</html>
